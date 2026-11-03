@@ -1,0 +1,426 @@
+{
+  "ambiente": {
+    "postgres": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "mongo": "7.0.42 (FerretDB)"
+  },
+  "s0": {
+    "titulo": "Controle: inserção sem falhas (Postgres -> MongoDB)",
+    "ordem": [
+      "postgres",
+      "mongodb"
+    ],
+    "resultado": "COMMITTED",
+    "erro": "",
+    "estados": {
+      "antes": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      },
+      "na_decisao": {
+        "pg_linhas": [],
+        "pg_prepared": 1,
+        "mongo_visiveis": [],
+        "mongo_pending": 1
+      },
+      "depois": {
+        "pg_linhas": [
+          {
+            "id": "P-1",
+            "name": "Notebook",
+            "qty": 10,
+            "version": 1
+          }
+        ],
+        "pg_prepared": 0,
+        "mongo_visiveis": [
+          {
+            "id": "P-1",
+            "name": "Notebook",
+            "qty": 10,
+            "version": 1
+          }
+        ],
+        "mongo_pending": 0
+      }
+    },
+    "eventos": [
+      {
+        "t_ms": 0.0,
+        "evento": "BEGIN"
+      },
+      {
+        "t_ms": 12.3,
+        "evento": "PREPARE_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 16.0,
+        "evento": "PREPARE_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 16.3,
+        "evento": "DECISION",
+        "decision": "COMMIT"
+      },
+      {
+        "t_ms": 45.2,
+        "evento": "COMMIT_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 49.4,
+        "evento": "COMMIT_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 49.6,
+        "evento": "END",
+        "outcome": "COMMITTED"
+      }
+    ]
+  },
+  "s1": {
+    "titulo": "Cenário 1: Postgres -> MongoDB (falha no MongoDB)",
+    "ordem": [
+      "postgres",
+      "mongodb"
+    ],
+    "resultado": "ABORTED",
+    "erro": "mongodb: erro simulado ao gravar (prepare)",
+    "estados": {
+      "antes": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      },
+      "na_decisao": {
+        "pg_linhas": [],
+        "pg_prepared": 1,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      },
+      "depois": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      }
+    },
+    "eventos": [
+      {
+        "t_ms": 0.0,
+        "evento": "BEGIN"
+      },
+      {
+        "t_ms": 12.7,
+        "evento": "PREPARE_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 13.0,
+        "evento": "PREPARE_FAIL",
+        "participant": "mongodb",
+        "error": "mongodb: erro simulado ao gravar (prepare)"
+      },
+      {
+        "t_ms": 14.1,
+        "evento": "DECISION",
+        "decision": "ABORT"
+      },
+      {
+        "t_ms": 29.8,
+        "evento": "ROLLBACK_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 42.2,
+        "evento": "ROLLBACK_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 42.5,
+        "evento": "END",
+        "outcome": "ABORTED"
+      }
+    ]
+  },
+  "s2": {
+    "titulo": "Cenário 2: MongoDB -> Postgres (falha no Postgres)",
+    "ordem": [
+      "mongodb",
+      "postgres"
+    ],
+    "resultado": "ABORTED",
+    "erro": "postgres: new row for relation \"items\" violates check constraint \"items_qty_check\"",
+    "estados": {
+      "antes": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      },
+      "na_decisao": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 1
+      },
+      "depois": {
+        "pg_linhas": [],
+        "pg_prepared": 0,
+        "mongo_visiveis": [],
+        "mongo_pending": 0
+      }
+    },
+    "eventos": [
+      {
+        "t_ms": 0.0,
+        "evento": "BEGIN"
+      },
+      {
+        "t_ms": 1.8,
+        "evento": "PREPARE_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 14.5,
+        "evento": "PREPARE_FAIL",
+        "participant": "postgres",
+        "error": "postgres: new row for relation \"items\" violates check constraint \"items_qty_check\""
+      },
+      {
+        "t_ms": 15.0,
+        "evento": "DECISION",
+        "decision": "ABORT"
+      },
+      {
+        "t_ms": 42.7,
+        "evento": "ROLLBACK_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 47.9,
+        "evento": "ROLLBACK_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 48.2,
+        "evento": "END",
+        "outcome": "ABORTED"
+      }
+    ]
+  },
+  "extra": {
+    "titulo": "Extra: falha na fase 2 e recuperação pelo log",
+    "resultado_inicial": "IN_DOUBT",
+    "estado_em_duvida": {
+      "pg_linhas": [],
+      "pg_prepared": 1,
+      "mongo_visiveis": [
+        {
+          "id": "P-3",
+          "name": "Teclado",
+          "qty": 7,
+          "version": 1
+        }
+      ],
+      "mongo_pending": 0
+    },
+    "recuperadas": [
+      [
+        "7b648978dd9c",
+        "COMMITTED"
+      ]
+    ],
+    "estado_final": {
+      "pg_linhas": [
+        {
+          "id": "P-3",
+          "name": "Teclado",
+          "qty": 7,
+          "version": 1
+        }
+      ],
+      "pg_prepared": 0,
+      "mongo_visiveis": [
+        {
+          "id": "P-3",
+          "name": "Teclado",
+          "qty": 7,
+          "version": 1
+        }
+      ],
+      "mongo_pending": 0
+    },
+    "eventos": [
+      {
+        "t_ms": 0.0,
+        "evento": "BEGIN"
+      },
+      {
+        "t_ms": 13.6,
+        "evento": "PREPARE_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 16.7,
+        "evento": "PREPARE_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 17.0,
+        "evento": "DECISION",
+        "decision": "COMMIT"
+      },
+      {
+        "t_ms": 17.4,
+        "evento": "COMMIT_FAIL",
+        "participant": "postgres",
+        "attempt": 1,
+        "error": "postgres: commit indisponível (commit)"
+      },
+      {
+        "t_ms": 27.8,
+        "evento": "COMMIT_FAIL",
+        "participant": "postgres",
+        "attempt": 2,
+        "error": "postgres: commit indisponível (commit)"
+      },
+      {
+        "t_ms": 38.3,
+        "evento": "COMMIT_FAIL",
+        "participant": "postgres",
+        "attempt": 3,
+        "error": "postgres: commit indisponível (commit)"
+      },
+      {
+        "t_ms": 52.3,
+        "evento": "COMMIT_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 79.6,
+        "evento": "COMMIT_OK",
+        "participant": "postgres"
+      },
+      {
+        "t_ms": 81.8,
+        "evento": "COMMIT_OK",
+        "participant": "mongodb"
+      },
+      {
+        "t_ms": 82.1,
+        "evento": "END",
+        "outcome": "COMMITTED",
+        "recovered": true
+      }
+    ]
+  },
+  "s3": {
+    "titulo": "Cenário 3: atualizações 2PC com leitura a cada 10 ms",
+    "config": {
+      "updates": 80,
+      "intervalo_leitura_ms": 10.0,
+      "pausa_entre_fases_ms": 20.0,
+      "versoes_abortadas": [
+        12,
+        25
+      ]
+    },
+    "duracao_updates_s": 6.35,
+    "transacoes": {
+      "total": 80,
+      "commit": 78,
+      "abortadas": [
+        {
+          "version": 12,
+          "qty": 120,
+          "tx": "f8715fb472fb",
+          "ordem": [
+            "postgres",
+            "mongodb"
+          ],
+          "outcome": "ABORTED",
+          "erro": "mongodb: erro simulado ao gravar (prepare)"
+        },
+        {
+          "version": 25,
+          "qty": -1,
+          "tx": "e92e2e197fd6",
+          "ordem": [
+            "mongodb",
+            "postgres"
+          ],
+          "outcome": "ABORTED",
+          "erro": "postgres: new row for relation \"items\" violates check constraint \"items_qty_check\""
+        }
+      ],
+      "em_duvida": []
+    },
+    "leitor": {
+      "amostras": 664,
+      "intervalo_medio_ms": 10.03,
+      "intervalo_p95_ms": 11.7,
+      "intervalo_max_ms": 15.81,
+      "duracao_media_leitura_ms": 2.76,
+      "estouros_de_10ms": 7,
+      "amostras_estaveis": 660
+    },
+    "leituras_sujas": 0,
+    "divergencia": {
+      "amostras": 93,
+      "pct_das_estaveis": 14.09,
+      "postgres_a_frente": 26,
+      "mongodb_a_frente": 67,
+      "episodios": 65,
+      "maior_episodio_ms": 20.5
+    },
+    "janelas": {
+      "commit_entre_bancos_ms_medio": 11.87,
+      "commit_entre_bancos_ms_max": 39.44,
+      "prepared_ms_medio": 32.15
+    },
+    "versoes_observadas": {
+      "postgres": 79,
+      "mongodb": 79,
+      "commitadas": 79
+    },
+    "estado_final": {
+      "postgres": [
+        {
+          "id": "A",
+          "name": "item-A",
+          "qty": 810,
+          "version": 81
+        },
+        {
+          "id": "B",
+          "name": "item-B",
+          "qty": 100,
+          "version": 1
+        }
+      ],
+      "mongodb": [
+        {
+          "id": "A",
+          "name": "item-A",
+          "qty": 810,
+          "version": 81
+        },
+        {
+          "id": "B",
+          "name": "item-B",
+          "qty": 100,
+          "version": 1
+        }
+      ],
+      "identicos": true,
+      "pg_prepared": 0,
+      "mongo_pending": 0
+    }
+  }
+}

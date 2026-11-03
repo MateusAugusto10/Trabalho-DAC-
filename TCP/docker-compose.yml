@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    # max_prepared_transactions > 0 é obrigatório para PREPARE TRANSACTION (2PC nativo)
+    command: ["postgres", "-c", "max_prepared_transactions=20"]
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tpc
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tpc"]
+      interval: 2s
+      retries: 20
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      retries: 20
